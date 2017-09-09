@@ -1,0 +1,14 @@
+machine:
+  node:
+    version: 6.11.2
+  environment:
+    NODE_ENV: test
+
+dependencies:
+  override:
+    - npm install
+    - npm install && npm run compile
+
+test:
+  override:
+    - npm run compile && npm run test

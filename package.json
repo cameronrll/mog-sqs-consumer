@@ -1,0 +1,40 @@
+{
+  "name": "mog-sqs-consumer",
+  "version": "0.0.1",
+  "description": "Reliable and advanced AWS SQS queue consumption",
+  "main": "compiled/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "rm -rf compiled && ../../node_modules/.bin/tsc --importHelpers && rm -rf compiled/**/__tests__",
+  },
+  "keywords": [
+    "sqs",
+    "aws-sqs",
+    "consumer",
+    "queue",
+    "queues",
+    "aws",
+    "typescript",
+    "consumption"
+  ],
+  "author": "cameronrll <cameronrll@aol.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cameronrll/mog-sqs-consumer/issues"
+  },
+  "homepage": "https://github.com/cameronrll/mog-sqs-consumer#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cameronrll/mog-sqs-consumer.git"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.112.0",
+    "random-id": "0.0.2"
+  },
+  "devDependencies": {
+    "@types/aws-sdk": "^2.7.0",
+    "@types/node": "^8.0.28",
+    "ts-node": "^3.3.0",
+    "typescript": "^2.5.2"
+  }
+}

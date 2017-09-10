@@ -14,7 +14,6 @@ export interface ConsumerOptions {
 }
 export interface RetryTopologyDetails {
     queueUrl: string;
-    delay?: number;
 }
 export interface ArchiveTopologyDetails {
     bucketUrl: string;
@@ -39,6 +38,7 @@ export default class Consumer extends EventEmitter {
     private stopped;
     private inRelay;
     private inRetry;
+    private inArchive;
     private ongoingConsumption;
     constructor(sqs: AWS.SQS, consumerFunction: ConsumerFunction, options: ConsumerOptions);
     readonly queueUrl: string;

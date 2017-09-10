@@ -28,10 +28,12 @@ export type Message = AWS.SQS.Types.Message;
 export type Messages = AWS.SQS.Types.ReceiveMessageResult;
 export type ConsumerFunction = (m: Message) => any | Promise<any>;
 
+//TODO: add in handler for the error event (make sure consumer doesnt hang or misbehave)
+//TODO: we want a way to configure redrive polices for deadletter queues
 export default class Consumer extends EventEmitter {
 
     static defaultResultHandler: ResultHandler = async function (context: ResultContext, err?: any, result?: any) {
-        //TODO: context.ack()
+        context.ack();
     };
 
     //TODO: does this need to be public or can we have a getter? (dont want it set outside of call)
@@ -118,6 +120,7 @@ export default class Consumer extends EventEmitter {
         };
         if (options.isFifo) {
             queueOptions.Attributes = {
+                //TODO: can we make deduping an option easily?
                 'FifoQueue': `${options.isFifo}`,
                 "ContentBasedDeduplication": 'true'
             }
@@ -226,7 +229,8 @@ export default class Consumer extends EventEmitter {
                 this.incrementCounter();
                 let context: ResultContext;
                 let resultContextOptions:ResultContextOptions = {
-                    rejectDelay: this.consumerOptions.delayOptions.reject
+                    rejectDelay: this.consumerOptions.delayOptions.reject,
+                    relayDelay: this.consumerOptions.delayOptions.relay
                 };
                 if(this.retryTopology) {
                     resultContextOptions.retryQueueUrl = this.retryTopology.queueUrl;

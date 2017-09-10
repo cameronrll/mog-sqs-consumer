@@ -4,6 +4,8 @@ const tslib_1 = require("tslib");
 const events_1 = require("events");
 const ResultHandler_1 = require("./ResultHandler");
 const randomID = require('random-id');
+//TODO: add in handler for the error event (make sure consumer doesnt hang or misbehave)
+//TODO: we want a way to configure redrive polices for deadletter queues
 class Consumer extends events_1.EventEmitter {
     constructor(sqs, consumerFunction, options) {
         super();
@@ -12,11 +14,18 @@ class Consumer extends events_1.EventEmitter {
         this.stopped = true;
         this.inRelay = false;
         this.inRetry = false;
+        this.inArchive = false;
         this.ongoingConsumption = 0;
         this.consumerOptions = options;
         this.consumerOptions.resultHandler = options.resultHandler ? options.resultHandler : Consumer.defaultResultHandler;
         this.queueOptions = this.mergeQueueOptions(options);
-        //TODO: add events in here
+        this.on('consumed', () => this.decreaseCounter());
+        this.on('rejected', () => this.decreaseCounter());
+        this.on('archive_started', () => this.inArchive = true);
+        this.on('archive_complete', () => {
+            this.inArchive = false;
+            this.decreaseCounter();
+        });
         this.on('relay_started', () => this.inRelay = true);
         //TODO: think we will need to decrease the counter for this aswell (as the message is no longer being consumer)
         this.on('relay_complete', () => {
@@ -58,9 +67,9 @@ class Consumer extends events_1.EventEmitter {
         const queueOptions = {
             QueueName: options.queueName
         };
-        //TODO: change the way retry delay works. Add an option for a base delay into consumerOptions, and have the queue created with baseDelay
         if (options.isFifo) {
             queueOptions.Attributes = {
+                //TODO: can we make deduping an option easily?
                 'FifoQueue': `${options.isFifo}`,
                 "ContentBasedDeduplication": 'true'
             };
@@ -68,11 +77,6 @@ class Consumer extends events_1.EventEmitter {
         if (options.delayOptions.standard) {
             queueOptions.Attributes = {
                 'DelaySeconds': `${options.delayOptions.standard}`
-            };
-        }
-        if (options.delayOptions.reject) {
-            queueOptions.Attributes = {
-                'DelaySeconds': `${options.delayOptions.reject}`
             };
         }
         return queueOptions;
@@ -86,6 +90,7 @@ class Consumer extends events_1.EventEmitter {
     }
     stop() {
         return tslib_1.__awaiter(this, void 0, void 0, function* () {
+            //TODO: double check that this will never lose us a message with ack() and reject() (shouldn't do)
             if (this.stopped) {
                 throw new Error('Conumption is already stopped');
             }
@@ -101,6 +106,14 @@ class Consumer extends events_1.EventEmitter {
                 //Await for the current retry to finish
                 yield new Promise((resolve, reject) => {
                     this.on('retry_complete', () => {
+                        resolve();
+                    });
+                });
+            }
+            if (this.inArchive) {
+                //Await for the current upload to s3 to finish
+                yield new Promise((resolve, reject) => {
+                    this.on('archive_complete', () => {
                         resolve();
                     });
                 });
@@ -166,7 +179,8 @@ class Consumer extends events_1.EventEmitter {
                 this.incrementCounter();
                 let context;
                 let resultContextOptions = {
-                    rejectDelay: this.consumerOptions.delayOptions.reject
+                    rejectDelay: this.consumerOptions.delayOptions.reject,
+                    relayDelay: this.consumerOptions.delayOptions.relay
                 };
                 if (this.retryTopology) {
                     resultContextOptions.retryQueueUrl = this.retryTopology.queueUrl;
@@ -216,7 +230,7 @@ class Consumer extends events_1.EventEmitter {
 }
 Consumer.defaultResultHandler = function (context, err, result) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        //TODO: context.ack()
+        context.ack();
     });
 };
 exports.default = Consumer;

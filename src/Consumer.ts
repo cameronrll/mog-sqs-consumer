@@ -10,13 +10,12 @@ export interface ConsumerOptions {
     delayOptions?: {
         standard: number,
         reject: number,
-        relay: number
+        relay: number,
     }
 }
 
 export interface RetryTopologyDetails {
     queueUrl: string,
-    delay?: number
 }
 
 export interface ArchiveTopologyDetails {
@@ -51,6 +50,7 @@ export default class Consumer extends EventEmitter {
     private stopped: boolean = true;
     private inRelay: boolean = false;
     private inRetry: boolean = false;
+    private inArchive: boolean = false;
 
     private ongoingConsumption: number = 0;
 
@@ -65,7 +65,13 @@ export default class Consumer extends EventEmitter {
         this.consumerOptions.resultHandler = options.resultHandler ? options.resultHandler : Consumer.defaultResultHandler;
         this.queueOptions = this.mergeQueueOptions(options);
 
-        //TODO: add events in here
+        this.on('consumed', () => this.decreaseCounter());
+        this.on('rejected', () => this.decreaseCounter());
+        this.on('archive_started', () => this.inArchive = true);
+        this.on('archive_complete', () => {
+            this.inArchive = false;
+            this.decreaseCounter();
+        });
         this.on('relay_started', () => this.inRelay = true);
         //TODO: think we will need to decrease the counter for this aswell (as the message is no longer being consumer)
         this.on('relay_complete', () => {
@@ -110,7 +116,6 @@ export default class Consumer extends EventEmitter {
         const queueOptions: QueueOptions = {
             QueueName: options.queueName
         };
-        //TODO: change the way retry delay works. Add an option for a base delay into consumerOptions, and have the queue created with baseDelay
         if (options.isFifo) {
             queueOptions.Attributes = {
                 'FifoQueue': `${options.isFifo}`,
@@ -120,11 +125,6 @@ export default class Consumer extends EventEmitter {
         if (options.delayOptions.standard) {
             queueOptions.Attributes = {
                 'DelaySeconds': `${options.delayOptions.standard}`
-            }
-        }
-        if (options.delayOptions.reject) {
-            queueOptions.Attributes = {
-                'DelaySeconds': `${options.delayOptions.reject}`
             }
         }
         return queueOptions;
@@ -140,6 +140,7 @@ export default class Consumer extends EventEmitter {
     }
 
     async stop() {
+        //TODO: double check that this will never lose us a message with ack() and reject() (shouldn't do)
         if (this.stopped) {
             throw new Error('Conumption is already stopped');
         }
@@ -158,6 +159,14 @@ export default class Consumer extends EventEmitter {
                     resolve();
                 });
             })
+        }
+        if (this.inArchive) {
+            //Await for the current upload to s3 to finish
+            await new Promise((resolve, reject) => {
+                this.on('archive_complete', () => {
+                    resolve();
+                });
+            });
         }
         this.stopped = true;
     }

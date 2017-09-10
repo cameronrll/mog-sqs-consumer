@@ -15,7 +15,11 @@
     "queues",
     "aws",
     "typescript",
-    "consumption"
+    "consumption",
+    "sqs consumer",
+    "consumer sqs",
+    "consumers",
+    "sqs consumers"
   ],
   "author": "cameronrll <cameronrll@aol.com>",
   "license": "ISC",

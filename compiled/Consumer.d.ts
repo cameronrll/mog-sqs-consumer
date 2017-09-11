@@ -2,15 +2,16 @@
 import * as AWS from 'aws-sdk';
 import { EventEmitter } from 'events';
 import { ResultHandler } from "./ResultHandler";
+export interface DelayOptions {
+    standard?: number;
+    reject?: number;
+    relay?: number;
+}
 export interface ConsumerOptions {
     queueName?: string;
     isFifo?: boolean;
     resultHandler?: ResultHandler;
-    delayOptions?: {
-        standard?: number;
-        reject?: number;
-        relay?: number;
-    };
+    delayOptions?: DelayOptions;
 }
 export interface RetryTopologyDetails {
     queueUrl: string;
@@ -27,6 +28,7 @@ export default class Consumer extends EventEmitter {
     private sqs;
     private consumerFunction;
     static defaultResultHandler: ResultHandler;
+    static defaultDelayOptions: DelayOptions;
     currentReceiveRequest: AWS.Request<AWS.SQS.Types.ReceiveMessageResult, AWS.AWSError>;
     private consumerOptions;
     private queueOptions;

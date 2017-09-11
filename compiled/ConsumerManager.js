@@ -71,6 +71,7 @@ ConsumerManager.retryConsumerFunction = function (message) {
             messageParams.MessageDeduplicationId = randomID(20, 'aA');
         }
         try {
+            console.log('attempting to send message back');
             //Send it back to the original queue
             yield this.sqs.sendMessage(messageParams).promise();
         }

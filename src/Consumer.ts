@@ -3,15 +3,16 @@ import { EventEmitter } from 'events';
 import {ResultContext, ResultContextOptions, ResultHandler} from "./ResultHandler";
 const randomID = require('random-id');
 
+export interface DelayOptions {
+    standard?: number,
+    reject?: number,
+    relay?: number
+}
 export interface ConsumerOptions {
     queueName?: string,
     isFifo?: boolean,
     resultHandler?: ResultHandler,
-    delayOptions?: {
-        standard?: number,
-        reject?: number,
-        relay?: number,
-    }
+    delayOptions?: DelayOptions
 }
 
 export interface RetryTopologyDetails {
@@ -35,6 +36,12 @@ export default class Consumer extends EventEmitter {
 
     static defaultResultHandler: ResultHandler = async function (context: ResultContext, err?: any, result?: any) {
         context.ack();
+    };
+
+    static defaultDelayOptions: DelayOptions = {
+        standard: 0,
+        reject: 0,
+        relay: 0
     };
 
     //TODO: does this need to be public or can we have a getter? (dont want it set outside of call)
@@ -64,6 +71,7 @@ export default class Consumer extends EventEmitter {
     ) {
         super();
 
+        options.delayOptions = Object.assign({}, Consumer.defaultDelayOptions);
         this.consumerOptions = options;
         this.consumerOptions.resultHandler = options.resultHandler ? options.resultHandler : Consumer.defaultResultHandler;
         this.queueOptions = this.mergeQueueOptions(options);
@@ -122,7 +130,7 @@ export default class Consumer extends EventEmitter {
         if (options.isFifo) {
             queueOptions.Attributes = {
                 //TODO: can we make deduping an option easily?
-                'FifoQueue': `${options.isFifo}`,
+                "FifoQueue": `${options.isFifo}`,
                 "ContentBasedDeduplication": 'true'
             }
         }

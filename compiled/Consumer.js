@@ -17,6 +17,7 @@ class Consumer extends events_1.EventEmitter {
         this.inRetry = false;
         this.inArchive = false;
         this.ongoingConsumption = 0;
+        options.delayOptions = Object.assign({}, Consumer.defaultDelayOptions);
         this.consumerOptions = options;
         this.consumerOptions.resultHandler = options.resultHandler ? options.resultHandler : Consumer.defaultResultHandler;
         this.queueOptions = this.mergeQueueOptions(options);
@@ -71,7 +72,7 @@ class Consumer extends events_1.EventEmitter {
         if (options.isFifo) {
             queueOptions.Attributes = {
                 //TODO: can we make deduping an option easily?
-                'FifoQueue': `${options.isFifo}`,
+                "FifoQueue": `${options.isFifo}`,
                 "ContentBasedDeduplication": 'true'
             };
         }
@@ -233,5 +234,10 @@ Consumer.defaultResultHandler = function (context, err, result) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         context.ack();
     });
+};
+Consumer.defaultDelayOptions = {
+    standard: 0,
+    reject: 0,
+    relay: 0
 };
 exports.default = Consumer;

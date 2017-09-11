@@ -16,6 +16,7 @@ export interface RetryTopologyOptions {
 
 export default class ConsumerManager {
 
+    //TODO: this is not working (static an issue?)
     static retryConsumerFunction: ConsumerFunction = async function(message: Message) {
         const originalQueueUrl = message.MessageAttributes.originalQueueUrl.StringValue;
         const isFifo = originalQueueUrl.match(/\.fifo$/);
@@ -28,6 +29,7 @@ export default class ConsumerManager {
             messageParams.MessageDeduplicationId = randomID(20, 'aA');
         }
         try {
+            console.log('attempting to send message back');
             //Send it back to the original queue
             await this.sqs.sendMessage(messageParams).promise();
         } catch(e) {

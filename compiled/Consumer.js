@@ -6,6 +6,7 @@ const ResultHandler_1 = require("./ResultHandler");
 const randomID = require('random-id');
 //TODO: add in handler for the error event (make sure consumer doesnt hang or misbehave)
 //TODO: we want a way to configure redrive polices for deadletter queues
+//TODO: add in a way to conifgure long polling delay
 class Consumer extends events_1.EventEmitter {
     constructor(sqs, consumerFunction, options) {
         super();

@@ -8,9 +8,9 @@ export interface ConsumerOptions {
     isFifo?: boolean,
     resultHandler?: ResultHandler,
     delayOptions?: {
-        standard: number,
-        reject: number,
-        relay: number,
+        standard?: number,
+        reject?: number,
+        relay?: number,
     }
 }
 
@@ -30,6 +30,7 @@ export type ConsumerFunction = (m: Message) => any | Promise<any>;
 
 //TODO: add in handler for the error event (make sure consumer doesnt hang or misbehave)
 //TODO: we want a way to configure redrive polices for deadletter queues
+//TODO: add in a way to conifgure long polling delay
 export default class Consumer extends EventEmitter {
 
     static defaultResultHandler: ResultHandler = async function (context: ResultContext, err?: any, result?: any) {

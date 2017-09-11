@@ -7,9 +7,9 @@ export interface ConsumerOptions {
     isFifo?: boolean;
     resultHandler?: ResultHandler;
     delayOptions?: {
-        standard: number;
-        reject: number;
-        relay: number;
+        standard?: number;
+        reject?: number;
+        relay?: number;
     };
 }
 export interface RetryTopologyDetails {

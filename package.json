@@ -5,7 +5,8 @@
   "main": "compiled/index.js",
   "scripts": {
     "test": "mocha -r ts-node/register src/__tests__/*Test.ts",
-    "compile": "rm -rf compiled && ./node_modules/.bin/tsc --importHelpers && rm -rf compiled/**/__tests__"
+    "compile": "rm -rf compiled && ./node_modules/.bin/tsc --importHelpers && rm -rf compiled/**/__tests__",
+    "snyk": "./node_modules/.bin/snyk test"
   },
   "keywords": [
     "sqs",
@@ -48,6 +49,7 @@
     "faker": "^4.1.0",
     "mocha": "^3.5.0",
     "sinon": "^3.2.1",
+    "snyk": "^1.40.2",
     "ts-node": "^3.3.0",
     "tslib": "^1.7.1",
     "typescript": "^2.5.2"

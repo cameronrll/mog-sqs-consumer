@@ -12,3 +12,4 @@ dependencies:
 test:
   override:
     - npm run compile && npm run test
+    - npm run snyk
